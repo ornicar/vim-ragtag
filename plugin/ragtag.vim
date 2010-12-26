@@ -147,7 +147,3 @@ function! s:closetag()
     return " />"
   endif
 endfunction
-
-if exists("g:ragtag_global_maps")
-  imap     <C-X>/    </<Plug>ragtagHtmlComplete
-endif

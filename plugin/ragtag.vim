@@ -11,8 +11,7 @@ let g:loaded_ragtag = 1
 if has("autocmd")
   augroup ragtag
     autocmd!
-    autocmd FileType *html*,wml,xml,xslt,xsd,jsp    call s:Init()
-    autocmd FileType php,asp*,cf,mason,eruby,liquid call s:Init()
+    autocmd FileType *html*,wml,xml,xslt,xsd,jsp,twig    call s:Init()
   augroup END
 endif
 

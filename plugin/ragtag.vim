@@ -50,6 +50,108 @@ function! s:Init()
   let g:surround_{char2nr("p")} = "<p>\n\t\r\n</p>"
   let g:surround_{char2nr("d")} = "<div\1div: \r^[^ ]\r &\1>\n\t\r\n</div>"
   imap <buffer> <C-X><C-_> <C-X>/
+  imap <buffer> <SID>ragtagOopen    <C-X><Lt><Space>
+  imap <buffer> <SID>ragtagOclose   <Space><C-X>><Left><Left>
+  if &ft == "php"
+    inoremap <buffer> <C-X><Lt> <?php
+    inoremap <buffer> <C-X>>    ?>
+    inoremap <buffer> <SID>ragtagOopen    <?php<Space>print<Space>
+    let b:surround_45 = "<?php \r ?>"
+    let b:surround_61 = "<?php print \r ?>"
+  elseif &ft == "htmltt" || &ft == "tt2html"
+    inoremap <buffer> <C-X><Lt> [%
+    inoremap <buffer> <C-X>>    %]
+    let b:surround_45  = "[% \r %]"
+    let b:surround_61  = "[% \r %]"
+    if !exists("b:surround_101")
+      let b:surround_101 = "[% \r %]\n[% END %]"
+    endif
+  elseif &ft =~ "django" || &ft == "liquid" || &ft == 'htmljinja'
+    inoremap <buffer> <SID>ragtagOopen    {{<Space>
+    inoremap <buffer> <SID>ragtagOclose   <Space>}}<Left><Left>
+    inoremap <buffer> <C-X><Lt> {%
+    inoremap <buffer> <C-X>>    %}
+    let b:surround_45 = "{% \r %}"
+    let b:surround_61 = "{{ \r }}"
+  elseif &ft == "mason"
+    inoremap <buffer> <SID>ragtagOopen    <&<Space>
+    inoremap <buffer> <SID>ragtagOclose   <Space>&><Left><Left>
+    inoremap <buffer> <C-X><Lt> <%
+    inoremap <buffer> <C-X>>    %>
+    let b:surround_45 = "<% \r %>"
+    let b:surround_61 = "<& \r &>"
+  elseif &ft == "cf"
+    inoremap <buffer> <SID>ragtagOopen    <cfoutput>
+    inoremap <buffer> <SID>ragtagOclose   </cfoutput><Left><C-Left><Left>
+    inoremap <buffer> <C-X><Lt> <cf
+    inoremap <buffer> <C-X>>    >
+    let b:surround_45 = "<cf\r>"
+    let b:surround_61 = "<cfoutput>\r</cfoutput>"
+  else
+    inoremap <buffer> <SID>ragtagOopen    <%=<Space>
+    inoremap <buffer> <C-X><Lt> <%
+    inoremap <buffer> <C-X>>    %>
+    let b:surround_45 = "<% \r %>"
+    let b:surround_61 = "<%= \r %>"
+  endif
+  imap <script> <buffer> <C-X>= <SID>ragtagOopen<SID>ragtagOclose<Left>
+  imap <script> <buffer> <C-X>+ <C-V><NL><Esc>I<SID>ragtagOopen<Esc>A<SID>ragtagOclose<Esc>F<NL>s
+  " <%\n\n%>
+  if &ft == "cf"
+    inoremap <buffer> <C-X>] <cfscript><CR></cfscript><Esc>O
+  elseif &ft == "mason"
+    inoremap <buffer> <C-X>] <%perl><CR></%perl><Esc>O
+  elseif &ft == "html" || &ft == "xhtml" || &ft == "xml"
+    imap     <buffer> <C-X>] <script<Space>type="text/javascript"><CR></script><Esc>O
+  else
+    imap     <buffer> <C-X>] <C-X><Lt><CR><C-X>><Esc>O
+  endif
+  " <% %>
+  if &ft =~ '\<eruby\>'
+    inoremap  <buffer> <C-X>- <%<Space><Space>-%><Esc>3hi
+    inoremap  <buffer> <C-X>_ <C-V><NL><Esc>I<%<Space><Esc>A<Space>-%><Esc>F<NL>s
+  elseif &ft == "cf"
+    inoremap  <buffer> <C-X>- <cf><Left>
+    inoremap  <buffer> <C-X>_ <cfset ><Left>
+  else
+    imap <buffer> <C-X>- <C-X><Lt><Space><Space><C-X>><Esc>2hi
+    imap <buffer> <C-X>_ <C-V><NL><Esc>I<C-X><Lt><Space><Esc>A<Space><C-X>><Esc>F<NL>s
+  endif
+  " Comments
+  if &ft =~ '^asp'
+    imap <buffer> <C-X>' <C-X><Lt>'<Space><Space><C-X>><Esc>2hi
+    imap <buffer> <C-X>" <C-V><NL><Esc>I<C-X><Lt>'<Space><Esc>A<Space><C-X>><Esc>F<NL>s
+    let b:surround_35 = maparg("<C-X><Lt>","i")."' \r ".maparg("<C-X>>","i")
+  elseif &ft == "jsp"
+    inoremap <buffer> <C-X>'     <Lt>%--<Space><Space>--%><Esc>4hi
+    inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<%--<Space><Esc>A<Space>--%><Esc>F<NL>s
+    let b:surround_35 = "<%-- \r --%>"
+  elseif &ft == "cf"
+    inoremap <buffer> <C-X>'     <Lt>!---<Space><Space>---><Esc>4hi
+    inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<!---<Space><Esc>A<Space>---><Esc>F<NL>s
+    setlocal commentstring=<!---%s--->
+    let b:surround_35 = "<!--- \r --->"
+  elseif &ft == "html" || &ft == "xml" || &ft == "xhtml"
+    inoremap <buffer> <C-X>'     <Lt>!--<Space><Space>--><Esc>3hi
+    inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<!--<Space><Esc>A<Space>--><Esc>F<NL>s
+    let b:surround_35 = "<!-- \r -->"
+  elseif &ft == "django" || &ft == "htmldjango" || &ft == 'htmljinja'
+    inoremap <buffer> <C-X>'     {#<Space><Space>#}<Esc>2hi
+    inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<C-X>{#<Space><Esc>A<Space>#}<Esc>F<NL>s
+    let b:surround_35 = "{# \r #}"
+  elseif &ft == "liquid"
+    inoremap <buffer> <C-X>'     {%<Space>comment<Space>%}{%<Space>endcomment<Space>%}<Esc>15hi
+    inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<C-X>{%<Space>comment<Space>%}<Esc>A{%<Space>endcomment<Space>%}<Esc>F<NL>s
+    let b:surround_35 = "{% comment %}\r{% endcomment %}"
+  else
+    imap <buffer> <C-X>' <C-X><Lt>#<Space><Space><C-X>><Esc>2hi
+    imap <buffer> <C-X>" <C-V><NL><Esc>I<C-X><Lt>#<Space><Esc>A<Space><C-X>><Esc>F<NL>s
+    let b:surround_35 = maparg("<C-X><Lt>","i")."# \r ".maparg("<C-X>>","i")
+  endif
+  imap <buffer> <C-X>%           <Plug>ragtagUrlEncode
+  imap <buffer> <C-X>&           <Plug>ragtagXmlEncode
+  imap <buffer> <C-V>%           <Plug>ragtagUrlV
+  imap <buffer> <C-V>&           <Plug>ragtagXmlV
   if !exists("b:did_indent")
     if s:subtype() == "xml"
       runtime! indent/xml.vim

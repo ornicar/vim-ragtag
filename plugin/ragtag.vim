@@ -1,5 +1,5 @@
 " ragtag.vim - Ghetto XML/HTML mappings (formerly allml.vim)
-" Author:       Tim Pope <vimNOSPAM@tpope.org>
+" Author:       Tim Pope <http://tpo.pe/>
 " Version:      2.0
 " GetLatestVimScripts: 1896 1 :AutoInstall: ragtag.vim
 
@@ -11,7 +11,13 @@ let g:loaded_ragtag = 1
 if has("autocmd")
   augroup ragtag
     autocmd!
-    autocmd FileType *html*,wml,xml,xslt,xsd,jsp,twig    call s:Init()
+    autocmd FileType *html*,wml,jsp,twig            call s:Init()
+    autocmd FileType php,asp*,cf,mason,eruby,liquid call s:Init()
+    autocmd FileType xml,xslt,xsd,docbk             call s:Init()
+    if version >= 700
+      autocmd InsertLeave * call s:Leave()
+    endif
+    autocmd CursorHold * if exists("b:loaded_ragtag") | call s:Leave() | endif
   augroup END
 endif
 
@@ -35,7 +41,7 @@ function! s:Init()
   elseif s:subtype() == "xhtml"
     imap <script> <buffer> <SID>doctype <SID>xhtmltrans
   else
-    imap <script> <buffer> <SID>doctype <SID>htmltrans
+    imap <script> <buffer> <SID>doctype <SID>html5
   endif
 
   if exists("&omnifunc")
@@ -102,7 +108,7 @@ function! s:Init()
   elseif &ft == "mason"
     inoremap <buffer> <C-X>] <%perl><CR></%perl><Esc>O
   elseif &ft == "html" || &ft == "xhtml" || &ft == "xml"
-    imap     <buffer> <C-X>] <script<Space>type="text/javascript"><CR></script><Esc>O
+    imap     <buffer> <C-X>] <script<C-R>=<SID>javascriptType()<CR>><CR></script><Esc>O
   else
     imap     <buffer> <C-X>] <C-X><Lt><CR><C-X>><Esc>O
   endif
@@ -165,7 +171,12 @@ function! s:Init()
   endif
   set indentkeys+=!^F
   let b:surround_indent = 1
+  silent doautocmd User Ragtag
   silent doautocmd User ragtag
+endfunction
+
+function! s:Leave()
+  call s:disableescape()
 endfunction
 
 function! s:length(str)
@@ -219,16 +230,18 @@ endfunction
 
 function! s:subtype()
   let top = getline(1)."\n".getline(2)
-  if (top =~ '<?xml\>' && &ft !~? 'html') || &ft =~? '^\%(xml\|xsd\|xslt\)$'
+  if (top =~ '<?xml\>' && &ft !~? 'html') || &ft =~? '^\%(xml\|xsd\|xslt\|docbk\)$'
     return "xml"
   elseif top =~? '\<xhtml\>'
     return 'xhtml'
-  elseif top =~ '[^<]\<html\>'
+  elseif top =~? '<!DOCTYPE html>'
+    return 'html5'
+  elseif top =~? '[^<]\<html\>'
     return "html"
-  elseif &ft == "xhtml" || &ft == '\<eruby\>'
+  elseif &ft == "xhtml"
     return "xhtml"
   elseif exists("b:loaded_ragtag")
-    return "html"
+    return "html5"
   else
     return ""
   endif

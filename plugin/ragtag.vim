@@ -176,7 +176,6 @@ function! s:Init()
 endfunction
 
 function! s:Leave()
-  call s:disableescape()
 endfunction
 
 function! s:length(str)
